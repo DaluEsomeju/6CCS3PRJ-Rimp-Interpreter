@@ -1,0 +1,6 @@
+// a simple factorial program  in the simp language to compute factorial of n 
+n := 6;
+fact := 1;
+while !n > 0 do 
+  fact :=  !fact * !n ;  
+  n := !n - 1
