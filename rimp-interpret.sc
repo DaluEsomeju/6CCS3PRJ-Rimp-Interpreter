@@ -123,7 +123,12 @@ def rconfig_to_string (c : RConfig) : String = c match {
     case _ => "Error 1"
 }
 
-def init_config (tree : List [Prog]) : RConfig = (tree, Nil, init_renv(tree), Nil)
+def init_config (tree : List [Prog]) : RConfig =  tree.head.isInstanceOf[IExp] match {
+    case true => (tree, Nil, init_renv(tree), Nil)
+    case false => (List(prog_seq(tree)), Nil, init_renv(tree), Nil)
+}
+
+
 
 //initial RMemory is a map from variables to pairs (k, v) where v is a RvZero and k is 0
 //go through the tree and find all the variables and add them to the RMemory
@@ -405,8 +410,37 @@ def step_revcmd (c :RConfig) : Option [RConfig] = c match {
                 Some(top_of_control ::: cs, new_rs, new_renv, top_of_backtrack ::: bs)
             }
 
+
+     case (ProgSeq(p1, p2) :: cs, rs, renv, bs) => {
+        val top_of_control = List(p1, p2, SemiLabel) 
+        val new_bs = ProgSeqLabel :: bs
+        Some(top_of_control ::: cs, rs, renv, new_bs)
+     }
+
+    case (ProgSeqLabel :: bs, rs, renv, cs) => {
+            val p1 = cs.head
+            val p2 = cs.tail.head
+            val new_cs = ProgSeq(p1, p2) :: cs.drop(3)
+            Some(bs, rs, renv, new_cs)
+    }   
+
+
+    case (SemiLabel :: cs, rs, renv, bs) => {
+        val c2 = bs.head
+        val c1 = bs.tail.head
+        val new_bs = ProgSeq(c2, c1) :: bs.drop(3)
+        Some(cs, rs, renv, new_bs)
+    } 
+
 }
 
+
+//convert a list of programs into a a ProgSeq (p1 , p2)
+def prog_seq (ps :List [Prog]) : Prog = ps match {
+    case Nil => Skip
+    case x :: Nil => x
+    case x :: xs => ProgSeq(x, prog_seq(xs))
+}
                
 
 
@@ -420,6 +454,7 @@ def rstep_all (c :RConfig) : RConfig = {
     case (cs, rs, renv, bs) => {
         cs match {
             case Nil => c
+            case ProgSeq(p1, p2) :: xs => rstep_all(step_revcmd(c).get)
             case x :: xs => x.isInstanceOf[Cmd] match {
                 case true => rstep_all(step_revcmd(c).get)
                 case false => rstep_all(step_revexp(c).get)
@@ -431,37 +466,40 @@ def rstep_all (c :RConfig) : RConfig = {
 
 
 
-// @main
-// def main(filename: String): Unit = {
-//   val tokens = tokenise(os.read(os.pwd / filename))
-//   val tree = Prog.parse_single(tokens)
-//   val rimp_tree = translate_prog(tree)
-//  // val result = rev_prog(rev_tree)
-//     print ("rimp tree ==> " + rimp_tree + "\n")
-//     val config = init_config(rimp_tree)
-//     val switched = switch(rstep_all(config))
-//     print ("switched config ==> " + rconfig_to_string(switched) + "\n")
-
-//     println ("running in reverse " + "\n")
-
-//     rstep_all(switched)
-
-
-
-// }
-
-
-//test 
-
-val tokens = tokenise(os.read(os.pwd / "test.simp"))
-val tree = Prog.parse_single(tokens)
-val rimp_tree = translate_prog(tree)
-   print ("rimp tree ==> " + rimp_tree + "\n")
-   val config = init_config(rimp_tree)
-   println ("initial config ==> " + rconfig_to_string(config) + "\n")
-   val switched = switch(rstep_all(config))
+@main
+def main(filename: String): Unit = {
+  val tokens = tokenise(os.read(os.pwd / filename))
+  val tree = Prog.parse_single(tokens)
+  val rimp_tree = translate_prog(tree)
+ // val result = rev_prog(rev_tree)
+    print ("rimp tree ==> " + rimp_tree + "\n")
+    val config = init_config(rimp_tree)
+    val switched = switch(rstep_all(config))
     print ("switched config ==> " + rconfig_to_string(switched) + "\n")
 
     println ("running in reverse " + "\n")
 
     rstep_all(switched)
+
+
+
+}
+
+
+//test 
+
+// val tokens = tokenise(os.read(os.pwd / "test.simp"))
+// val tree = Prog.parse_single(tokens)
+// val rimp_tree = translate_prog(tree)
+// print ("rimp tree ==> " + rimp_tree + "\n")
+// val config = init_config(rimp_tree)
+// println ("initial config ==> " + rconfig_to_string(config) + "\n")
+
+// rstep_all(config)
+
+// //   val switched = switch(rstep_all(config))
+// //   print ("switched config ==> " + rconfig_to_string(switched) + "\n")
+
+// //   println ("running in reverse " + "\n")
+
+// //   rstep_all(switched)

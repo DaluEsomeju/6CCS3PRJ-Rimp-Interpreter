@@ -187,10 +187,18 @@ case object RevAssignLabel extends Cmd {  //reverse assign label for convenience
   override def toString = "asgnr"
 }
 
+case object ProgSeqLabel extends Cmd {  //sequence label for convenience on the control stack 
+  override def toString = "seq"
+}
+
+case object SemiLabel extends Cmd {  //semicolon label to separate commands in a sequence 
+  override def toString = ";"
+}
+
 
 case class  ProgBl (bl: Block) extends Prog //program block to keep track of the block of a program
 
-case class ProgSeq(p1: Prog, p2: List[Prog]) extends Prog //program sequence
+case class ProgSeq(p1: Prog, p2: Prog) extends Prog //program sequence
 
 
 
