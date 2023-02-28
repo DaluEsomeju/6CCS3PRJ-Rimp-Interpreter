@@ -13,12 +13,22 @@ class Rval   {
         case RvZero => 0
         case RvPair(n, r) => if (n == 0)  throw new Exception("n can not be 0") else n + r.toInt
     }
+
+    def getN : Int = this match {
+        case RvZero => throw new Exception("not an RvPair")
+        case RvPair(n, r) => n
+    }
+
+    def getV : Rval = this match {
+        case RvZero => throw new Exception("not an RvPair")
+        case RvPair(n, r) => r
+    }
 }
 
 
 case object RvZero extends Rval // 0
 
-case class RvPair (n : Int , r : Rval) extends Rval // +(n, r) //n can not be 0
+case class RvPair (n : Int , r : Rval) extends Rval   // +(n, r) //n can not be 0
 
 
 def int_to_rval (n : Int) : Rval = {
@@ -113,8 +123,16 @@ def rconfig_to_string (c : RConfig) : String = c match {
     case _ => "Error 1"
 }
 
-def init_config (tree : List [Prog]) : RConfig = (tree, Nil, Map(), Nil)
+def init_config (tree : List [Prog]) : RConfig = (tree, Nil, init_renv(tree), Nil)
 
+//initial RMemory is a map from variables to pairs (k, v) where v is a RvZero and k is 0
+//go through the tree and find all the variables and add them to the RMemory
+
+def init_renv(tree : List[Prog]) : Renv = tree match {
+    case Nil => Map()
+   case Assign (Var (s), e) :: rest => Map(s -> (0, RvZero)) ++ init_renv(rest)
+    case _ :: rest => init_renv(rest)
+}
 
 //switch the backtracking stack with the control stack
 def switch (c : RConfig) : RConfig = c match {
@@ -279,8 +297,113 @@ def step_revexp (c : RConfig) :Option[RConfig] = c match {
 
 
 
-def stev_revcmd (c :RConfig) : Option [RConfig] = c match {
+def step_revcmd (c :RConfig) : Option [RConfig] = c match {
    case (Skip :: cs, rs, renv, bs) => Some(cs, rs, renv, Skip :: bs)
+
+    case (Assign(Var(null), EmptyExp) :: cs, rs, renv, bs) => {
+        val n2 = rs.head.to_Iexp match {
+            case Num(x) => x
+            case _ => throw new Exception("Invalid number")
+        }
+        val n1 = rs.tail.head.to_Iexp match {
+            case Num(x) => x
+            case _ => throw new Exception("Invalid number")
+        }
+        val var_name = rs.tail.tail.head match {
+            case Var(x) => x
+            case _ => throw new Exception("Invalid variable")
+        }
+
+        val n = n1 - n2
+
+        val exp = bs.drop(3).head.to_Iexp
+        
+        val new_rs = rs.drop(3)
+
+        val v = renv(var_name)._2
+
+        val new_renv = renv + (var_name -> (n1 , RvPair(n, v)))
+
+        val new_bs = RevAssign(Var(var_name), exp) :: bs.drop(4)
+
+        Some(cs, new_rs, new_renv, new_bs)
+
+    }
+   
+    case (Assign(Var(x), e) :: cs, rs, renv, bs) => {
+                val top_of_control = e :: List(DRefr(x), Assign(Var(null), EmptyExp))
+                val new_rs = Var(x) :: rs
+                val top_of_backtrack = AssignLabel :: List(e)
+
+                Some(top_of_control ::: cs, new_rs, renv, top_of_backtrack ::: bs)
+            }
+
+
+    case (AssignLabel :: bs, rs, renv, cs) => {
+        val e = cs.head.to_Iexp
+        val x = rs.head match {
+            case Var(y) => Var(y)
+            case _ => throw new Exception("Invalid variable")
+        }
+        val new_rs = rs.drop(1)
+        val new_cs = Assign(x, e) :: cs.drop(3)
+        Some(bs, new_rs, renv, new_cs)
+    }
+
+     case (RevAssignLabel :: bs, rs, renv, cs) => {
+        val new_bs = bs.drop(2)
+        val new_rs = rs.drop(1)
+
+        val e = cs.head.to_Iexp
+        val var_name = rs.head match {
+            case Var(y) => y
+            case _ => throw new Exception("Invalid variable")
+        }
+
+        val (number, rvalue) = renv(var_name)
+
+        val n = bs.head.to_Iexp match {
+            case Num(x) => x
+            case _ => throw new Exception("Invalid number")
+        }
+
+        val new_renv = renv + (var_name -> ((number + n , rvalue)))
+
+        val new_cs = RevAssign(Var(var_name), e) :: cs.drop(3)
+
+        Some(new_bs, new_rs, new_renv, new_cs)
+
+     }
+
+     case (RevAssign(Var(null), EmptyExp) :: cs, rs, renv, bs) => {
+        val var_name = rs.tail.tail.head match {
+            case Var(x) => x
+            case _ => throw new Exception("Invalid variable")
+        }
+        val exp = bs.drop(4).head.to_Iexp
+        
+        val new_rs = rs.drop(3)
+
+        val new_bs = Assign(Var(var_name), exp) :: bs.drop(5)
+
+        Some(cs, new_rs, renv, new_bs)
+
+     }
+
+    case (RevAssign(Var(x), e) :: cs, rs, renv, bs) => {
+                val top_of_control = e :: List(DRefr(x), RevAssign(Var(null), EmptyExp))
+                val new_rs = Var(x) :: rs
+
+                val (number, rvalue) = renv(x)
+                val n = number - rvalue.getN
+
+
+                val new_renv = renv + (x -> (n, rvalue.getV))
+
+                val top_of_backtrack = RevAssignLabel :: List(Num(n) , e)
+
+                Some(top_of_control ::: cs, new_rs, new_renv, top_of_backtrack ::: bs)
+            }
 
 }
 
@@ -295,29 +418,50 @@ def rstep_all (c :RConfig) : RConfig = {
     println (rconfig_to_string(c))
     c match {
     case (cs, rs, renv, bs) => {
-        if (cs == Nil) c
-        else  rstep_all(step_revexp(c).get)
+        cs match {
+            case Nil => c
+            case x :: xs => x.isInstanceOf[Cmd] match {
+                case true => rstep_all(step_revcmd(c).get)
+                case false => rstep_all(step_revexp(c).get)
+            }
+        }
        }
     }
 }
 
 
 
-@main
-def main(filename: String): Unit = {
-  val tokens = tokenise(os.read(os.pwd / filename))
-  val tree = Prog.parse_single(tokens)
-  val rimp_tree = translate_prog(tree)
- // val result = rev_prog(rev_tree)
-    print ("rimp tree ==> " + rimp_tree + "\n")
-    val config = init_config(rimp_tree)
-    val switched = switch(rstep_all(config))
+// @main
+// def main(filename: String): Unit = {
+//   val tokens = tokenise(os.read(os.pwd / filename))
+//   val tree = Prog.parse_single(tokens)
+//   val rimp_tree = translate_prog(tree)
+//  // val result = rev_prog(rev_tree)
+//     print ("rimp tree ==> " + rimp_tree + "\n")
+//     val config = init_config(rimp_tree)
+//     val switched = switch(rstep_all(config))
+//     print ("switched config ==> " + rconfig_to_string(switched) + "\n")
+
+//     println ("running in reverse " + "\n")
+
+//     rstep_all(switched)
+
+
+
+// }
+
+
+//test 
+
+val tokens = tokenise(os.read(os.pwd / "test.simp"))
+val tree = Prog.parse_single(tokens)
+val rimp_tree = translate_prog(tree)
+   print ("rimp tree ==> " + rimp_tree + "\n")
+   val config = init_config(rimp_tree)
+   println ("initial config ==> " + rconfig_to_string(config) + "\n")
+   val switched = switch(rstep_all(config))
     print ("switched config ==> " + rconfig_to_string(switched) + "\n")
 
     println ("running in reverse " + "\n")
 
     rstep_all(switched)
-
-
-
-}

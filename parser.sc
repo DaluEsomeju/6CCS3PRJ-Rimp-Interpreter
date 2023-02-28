@@ -179,9 +179,18 @@ case object ULNegExp extends IExp {  //underlined negative empty expression labe
   override def toString = underline("neg")
 }
 
+case object AssignLabel extends Cmd {  //assign label for convenience on the control stack 
+  override def toString = "asgn"
+}
+
+case object RevAssignLabel extends Cmd {  //reverse assign label for convenience on the control stack 
+  override def toString = "asgnr"
+}
+
 
 case class  ProgBl (bl: Block) extends Prog //program block to keep track of the block of a program
 
+case class ProgSeq(p1: Prog, p2: List[Prog]) extends Prog //program sequence
 
 
 
