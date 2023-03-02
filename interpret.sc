@@ -69,7 +69,7 @@ def init_config (tree : List [Prog]) : Config = (tree, List(), Map())
 def step_command (c : Config) : Option[Config] = c match {
   case (Skip::cs, rs, env) => Some(cs, rs, env)
 
-    case (Assign(Var(null), EmptyExp)::cs, Num(n)::Var(s):: rs, env) => {
+    case (AssignLabel::cs, Num(n)::Var(s):: rs, env) => {
 
     val new_rs = rs
     val new_env = env + (s -> n)
@@ -78,13 +78,13 @@ def step_command (c : Config) : Option[Config] = c match {
   }
   
   case (Assign(Var(s), e)::cs, rs, env) => {
-                      val top_of_stack = e :: List(Assign(Var(null), EmptyExp))
+                      val top_of_stack = e :: List(AssignLabel)
                       val new_rs = (Var(s)) :: rs
                       Some(top_of_stack ::: cs, new_rs , env)
                 }
 
 
-  case (If (EmptyExp, Nil, Nil)::cs , Num (n) :: ProgBl(bl1) :: ProgBl(bl2) :: rs, env) => {
+  case (IfLabel::cs , Num (n) :: ProgBl(bl1) :: ProgBl(bl2) :: rs, env) => {
     //num is the result of the expression
     if (n == 0) Some (bl2 ::: cs, rs, env)
     else Some (bl1 ::: cs, rs, env)
@@ -92,7 +92,7 @@ def step_command (c : Config) : Option[Config] = c match {
   }              
 
   case (If(e, bl1, bl2)::cs, rs, env) => {
-    val top_of_stack = e :: List(If(EmptyExp, Nil, Nil))
+    val top_of_stack = e :: List(IfLabel)
     val new_rs = ProgBl(bl1) :: List (ProgBl(bl2)) ::: rs
 
     Some (top_of_stack ::: cs, new_rs, env)

@@ -195,6 +195,22 @@ case object SemiLabel extends Cmd {  //semicolon label to separate commands in a
   override def toString = ";"
 }
 
+case object IfLabel extends Cmd {  //if label for convenience on the control stack 
+  override def toString = "if"
+}
+
+case object ULIfLabel extends Cmd {  //underlined if label for convenience on the control stack 
+  override def toString = underline("if")
+}
+
+case object ConditionLabel extends Cmd {  //condition label for convenience on the control stack 
+  override def toString = "cond"
+}
+
+case object ULConditionLabel extends Cmd {  //underlined condition label for convenience on the control stack 
+  override def toString = underline("cond")
+}
+
 
 case class  ProgBl (bl: Block) extends Prog //program block to keep track of the block of a program
 
@@ -243,9 +259,7 @@ lazy val SingleCmd : Parser[List[Token], Cmd] =
   (T_SKIP) ==> { case _=> Skip: Cmd } ||
   (T_LPAREN ~ SingleCmd ~ T_RPAREN) ==> { case x ~ y ~ z => y: Cmd } ||
   (IdParser ~ T_OP(":=") ~ IExp) ==> { case x ~ _ ~ y => Assign(Var(x), y): Cmd } ||
-  (T_KWD("if") ~ IExp ~ T_KWD("then") ~ ListParser(AllCmds, T_SEMI) ~ T_KWD("else") ~  ListParser(AllCmds, T_SEMI)) ==> { case _ ~ x ~ _ ~ y ~ _ ~ z => If(x, y, z): Cmd } ||
-  //if then with no else, in this case the else is skip
-  (T_KWD("if") ~ IExp ~ T_KWD("then") ~  ListParser(AllCmds, T_SEMI) ) ==> { case _ ~ x ~ _ ~ y  => If(x, y, List(Skip)): Cmd } 
+  (T_KWD("if") ~ IExp ~ T_KWD("then") ~ ListParser(AllCmds, T_SEMI) ~ T_KWD("else") ~  ListParser(AllCmds, T_SEMI)) ==> { case _ ~ x ~ _ ~ y ~ _ ~ z => If(x, y, z): Cmd } 
 
 
 lazy val WhileCmd : Parser[List[Token], Cmd] = 

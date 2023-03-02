@@ -293,6 +293,7 @@ def step_revexp (c : RConfig) :Option[RConfig] = c match {
           val new_cs = ULNot(e) :: bs.drop(1)
           Some(bs, rs, renv, new_cs)
     }
+    
 
    case (Nil , rs, renv, bs) => None
 
@@ -432,6 +433,106 @@ def step_revcmd (c :RConfig) : Option [RConfig] = c match {
         Some(cs, rs, renv, new_bs)
     } 
 
+    case (If (e , c1 , c2) :: cs, rs, renv, bs) => {
+        val top_of_control = List (e, IfLabel, ConditionLabel)
+        val block1 = prog_seq(c1)
+        val block2 = prog_seq(c2)
+        val new_rs = block1 :: block2 :: rs
+        val new_bs = ULConditionLabel :: bs
+        Some(top_of_control ::: cs, new_rs, renv, new_bs)
+
+        //todo check if this is correct
+    }
+
+    case (ULConditionLabel :: bs, rs, renv, cs) => {
+        val e = cs.head.to_Iexp
+        val c1 = rs.head match {
+            case ProgSeq(x, y) => prog_seq_as_block(ProgSeq(x, y))
+            case _ =>rs.head.asInstanceOf[Cmd] :: Nil
+        }
+        val c2 = rs.tail.head match {
+            case ProgSeq(x, y) => prog_seq_as_block(ProgSeq(x, y))
+            case _ =>rs.tail.head.asInstanceOf[Cmd] :: Nil
+        }
+        val new_rs = rs.drop(2)
+        val new_cs = If(e, c1, c2) :: cs.drop(3)
+        Some(bs, new_rs, renv, new_cs)
+
+        //todo check if this is correct
+    }
+
+
+    case (IfLabel :: cs, rs, renv, bs) => {
+        rs.head match {
+            case Num(x) => {
+                if (x == 0) {
+                    val c2 = rs.tail.tail.head
+                    val new_rs = rs.drop(1)
+                    val new_cs = c2 :: cs
+                    val e = remove_underline(bs.head.to_Iexp)
+                    val new_bs = e :: ULIfLabel :: bs.drop(1)
+                    Some(new_cs, new_rs, renv, new_bs)
+                }
+                else {
+                    val c1 = rs.tail.head
+                    val new_rs = rs.drop(1)
+                    val new_cs = c1 :: cs
+                    val e = remove_underline(bs.head.to_Iexp)
+                    val new_bs = e :: ULIfLabel :: bs.drop(1)
+                    Some(new_cs, new_rs, renv, new_bs)
+                }
+            }
+            case _ => throw new Exception("Invalid expression")
+        }
+
+        //todo check if this is correct
+    }
+
+    case (ULIfLabel:: bs , rs , renv , cs) => {
+        rs.head match {
+            case Num(x) => {
+                if (x == 0) {
+                    val e = cs.head
+                    val new_cs = IfLabel :: cs.drop(2)
+                    val new_bs = e :: ConditionLabel :: bs.drop(1)
+                    Some(new_bs , rs , renv , new_cs)
+                }
+                else {
+                    val e = cs.head
+                    val new_cs = IfLabel :: cs.drop(2)
+                    val new_bs = e :: ULConditionLabel :: bs.drop(1)
+                    Some(new_bs , rs , renv , new_cs)
+
+                }
+            }
+            case _ => throw new Exception("Invalid expression")
+        }
+    }
+
+
+    case (ConditionLabel :: cs, rs, renv, bs) => {
+        val e = bs.tail.head.to_Iexp
+        val c1 = rs.head match {
+            case ProgSeq(x, y) => prog_seq_as_block(ProgSeq(x, y))
+            case _ =>rs.head.asInstanceOf[Cmd] :: Nil
+        }
+        val c2 = rs.tail.head match {
+            case ProgSeq(x, y) => prog_seq_as_block(ProgSeq(x, y))
+            case _ =>rs.tail.head.asInstanceOf[Cmd] :: Nil
+        }
+        val new_rs = rs.drop(2)
+
+        val revc1 = rev_block(c1)
+        val revc2 = rev_block(c2)
+
+        val new_bs = If(e, revc1, revc2) :: bs.drop(4)
+        Some(cs, new_rs, renv, new_bs)
+
+        //todo check if this is correct
+    }
+
+    
+
 }
 
 
@@ -441,6 +542,13 @@ def prog_seq (ps :List [Prog]) : Prog = ps match {
     case x :: Nil => x
     case x :: xs => ProgSeq(x, prog_seq(xs))
 }
+
+//convert a ProgSeq into a list of commands
+def prog_seq_as_block (p :Prog) : List [Cmd] = p match {
+    case ProgSeq(p1, p2) => p1.asInstanceOf[Cmd] :: prog_seq_as_block(p2)
+    case x => List(x.asInstanceOf[Cmd])
+}
+
                
 
 
@@ -471,7 +579,7 @@ def main(filename: String): Unit = {
   val tokens = tokenise(os.read(os.pwd / filename))
   val tree = Prog.parse_single(tokens)
   val rimp_tree = translate_prog(tree)
- // val result = rev_prog(rev_tree)
+  // val result = rev_prog(rev_tree)
     print ("rimp tree ==> " + rimp_tree + "\n")
     val config = init_config(rimp_tree)
     val switched = switch(rstep_all(config))
