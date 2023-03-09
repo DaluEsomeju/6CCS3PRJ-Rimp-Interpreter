@@ -199,6 +199,26 @@ case object IfLabel extends Cmd {  //if label for convenience on the control sta
   override def toString = "if"
 }
 
+case class WhileLabel(index : Int) extends Cmd {  //while label for convenience on the control stack 
+  override def toString = "while"
+}
+
+case class ULWhileLabel(index : Int) extends Cmd {  //underlined while label for convenience on the control stack 
+  override def toString = underline("while")
+}
+
+case class LoopLabel(index : Int) extends Cmd {  //loop label for convenience on the control stack 
+  override def toString = "loop"
+}
+
+case class ULLoopLabel(index : Int) extends Cmd {  //underlined loop label for convenience on the control stack 
+  override def toString = underline("loop")
+}
+
+case class EndWhileLabel(index : Int) extends Cmd {  //end while label for convenience on the control stack 
+  override def toString = underline("endwhile")
+}
+
 case object ULIfLabel extends Cmd {  //underlined if label for convenience on the control stack 
   override def toString = underline("if")
 }

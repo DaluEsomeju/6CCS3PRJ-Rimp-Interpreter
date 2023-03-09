@@ -42,6 +42,9 @@ def int_to_rval (n : Int) : Rval = {
 
 type Renv = Map[String, (Int , Rval)] //maps each variable to a pair (k, v ) where  v is a RVal k is v.toInt
 
+// a map from each while command to an integer
+var while_map = Map[Cmd, Int]()
+
 
 //underline expression function from Iexp to Iexp
 //take an expression and return an expression
@@ -123,9 +126,24 @@ def rconfig_to_string (c : RConfig) : String = c match {
     case _ => "Error 1"
 }
 
-def init_config (tree : List [Prog]) : RConfig =  tree.head.isInstanceOf[IExp] match {
+
+//add the while commands to the while_map
+def add_while (tree : List[Prog]) : Unit = tree match {
+    case Nil => ()
+    case While (e, c) :: rest => { while_map += (While (e, c)) -> while_map.size
+    add_while(c)                                             
+   }
+    case _ :: rest => add_while(rest)
+}
+
+def init_config (tree : List [Prog]) : RConfig =  {
+    tree.head.isInstanceOf[IExp] match {
     case true => (tree, Nil, init_renv(tree), Nil)
-    case false => (List(prog_seq(tree)), Nil, init_renv(tree), Nil)
+    case false => {
+        add_while(tree)
+        (List(prog_seq(tree)), Nil, init_renv(tree), Nil)
+    }
+}
 }
 
 
@@ -136,6 +154,8 @@ def init_config (tree : List [Prog]) : RConfig =  tree.head.isInstanceOf[IExp] m
 def init_renv(tree : List[Prog]) : Renv = tree match {
     case Nil => Map()
    case Assign (Var (s), e) :: rest => Map(s -> (0, RvZero)) ++ init_renv(rest)
+   case If (e, c1, c2) :: rest => init_renv(c1) ++ init_renv(c2) ++ init_renv(rest)
+    case While (e, c) :: rest => init_renv(c) ++ init_renv(rest)
     case _ :: rest => init_renv(rest)
 }
 
@@ -531,6 +551,167 @@ def step_revcmd (c :RConfig) : Option [RConfig] = c match {
         //todo check if this is correct
     }
 
+    case (While (e , c) :: cs, rs, renv, bs) => {
+        val index = while_map(While(e, c))
+        val block  = prog_seq(c)
+        val top_of_control = List (e, WhileLabel(index), LoopLabel(index))
+        val top_of_rs = List (e, block )
+        val new_bs = ULLoopLabel(index) :: bs
+
+        Some(top_of_control ::: cs, top_of_rs ::: rs, renv, new_bs)
+
+        //todo check if this is correct
+    }
+
+    case (ULLoopLabel(index) :: bs, rs, renv, cs) => {
+        val e = cs.head.to_Iexp
+        val c = rs.tail.head match {
+            case ProgSeq(x, y) => prog_seq_as_block(ProgSeq(x, y))
+            case _ =>rs.tail.head.asInstanceOf[Cmd] :: Nil
+        }
+        val new_rs = rs.drop(2)
+        val new_cs = While(e, c) :: cs.drop(3)
+        Some(bs, new_rs, renv, new_cs)
+
+        //todo check if this is correct
+    }
+
+    case (WhileLabel(index) :: cs, rs, renv, bs) => {
+        rs.head match {
+            case Num(x) => {
+                if (x == 0) {
+                    val new_rs = rs.drop(1)
+                    val new_bs = List (Num(0), ULWhileLabel(index)) ::: bs.drop(1)
+                    Some(cs, new_rs, renv, new_bs)
+                }
+                else {
+                    val c = rs.tail.tail.head match {
+                        case ProgSeq(x, y) => prog_seq_as_block(ProgSeq(x, y))
+                        case _ =>rs.tail.tail.head.asInstanceOf[Cmd] :: Nil
+                    }
+                    val new_rs = rs.drop(1)
+                    val e = remove_underline(bs.head.to_Iexp)
+                    val sequence = prog_seq(c)
+                    val new_cs =   List(sequence , While(e, c)) ::: cs.drop(2)
+                    val new_bs = List(Num(1), ULWhileLabel(index))::: bs.drop(1)
+                    Some(new_cs, new_rs, renv, new_bs)
+                }
+            }
+            case _ => throw new Exception("Invalid expression")
+        }
+
+        //todo check if this is correct
+       
+    }
+
+    case (ULWhileLabel(index) :: bs, rs, renv, cs) => {
+        rs.head match {
+            case Num(x) => {
+                if (x == 0) {
+                    val e = rs.tail.head.to_Iexp
+                    val new_cs = WhileLabel(index) :: cs.drop(1)
+                    val new_bs = underline_exp(e) :: bs.drop(1)
+                    Some(new_bs, rs, renv, new_cs)
+                }
+                else {
+                    val c = rs.tail.tail.head match {
+                        case ProgSeq(x, y) => prog_seq_as_block(ProgSeq(x, y))
+                        case _ =>rs.tail.tail.head.asInstanceOf[Cmd] :: Nil
+                    }
+                    val e = rs.tail.head.to_Iexp
+                    val sequence = prog_seq(c)
+                    val new_cs =   List(WhileLabel(index) , LoopLabel(index) )::: cs.drop(3)
+                    val new_bs =  underline_exp(e) :: bs
+                    Some(new_bs, rs, renv, new_cs)
+                }
+            }
+            case _ => throw new Exception("Invalid expression")
+        }
+
+        //todo check if this is correct
+       
+    }
+
+    case (LoopLabel(index) :: cs, rs, renv, bs) => {
+        bs.head match {
+            case Num(0) => {
+                println("LoopLabel case 1")
+                val c = rs.tail.head match {
+                    case ProgSeq(x, y) => prog_seq_as_block(ProgSeq(x, y))
+                    case _ =>rs.tail.head.asInstanceOf[Cmd] :: Nil
+                }
+                val e = rs.head.to_Iexp
+                val c1 = rev_cmd (While(e, c))
+                val new_bs = EndWhileLabel(index):: bs.drop(3)
+                val new_rs = List( Num(0), c1) ::: rs
+                Some(LoopLabel(index) :: cs, new_rs, renv, new_bs)
+                
+            }
+
+
+            case _ => {
+                bs.tail.tail.head match {
+                case Num(1) => {
+                println("LoopLabel case 2")
+                val n = rs.head.to_Iexp
+                val incremented = n match {
+                    case Num(x) => Num(x + 1)
+                    case _ => throw new Exception("Invalid expression")
+                }
+                val new_rs = incremented :: rs.drop(1)
+                val new_bs = EndWhileLabel(index) :: bs.drop(5)
+                Some(LoopLabel(index) :: cs, new_rs, renv, new_bs)
+            }
+
+            case _ => {
+                println("LoopLabel case 3")
+                val c1 = rs.tail.head 
+                val new_rs = rs.drop(4)
+                val new_bs = c1 :: bs
+                Some(cs , rs, renv, new_bs)
+               }
+            }
+        }
+
+
+        }
+
+        //todo check if this is correct
+    }
+
+
+    case (EndWhileLabel(index) :: bs, rs, renv, cs) => {
+       rs.head match {
+            case Num(0) => {
+                val new_bs = List(Num(0), ULWhileLabel(index), LoopLabel(index)) ::: bs
+                val new_rs = rs.drop(2)
+                Some(new_bs, new_rs, renv, cs)
+            }
+
+            case Num(n) => {
+                val c = rs.tail.tail.tail.head match {
+                    case ProgSeq(x, y) => prog_seq_as_block(ProgSeq(x, y))
+                    case _ =>rs.tail.tail.head.asInstanceOf[Cmd] :: Nil
+                }
+
+                val e = rs.tail.tail.head.to_Iexp
+
+                val rev_c = prog_seq(rev_block(c))
+
+                val decrement = Num(n - 1)
+                val new_rs = decrement :: rs.drop(1)
+
+                val new_bs = List(EndWhileLabel(index), rev_c, Num(1) , WhileLabel(index), LoopLabel(index)) ::: bs
+
+                Some(new_bs, new_rs, renv, cs)
+            }
+
+            case _ => throw new Exception("Invalid expression")
+        }
+
+        //todo check if this is correct
+    }
+
     
 
 }
@@ -549,7 +730,8 @@ def prog_seq_as_block (p :Prog) : List [Cmd] = p match {
     case x => List(x.asInstanceOf[Cmd])
 }
 
-               
+
+var timer = 0
 
 
 //call step_revexp with the initial rconfig until the control stack is empty
@@ -557,7 +739,13 @@ def prog_seq_as_block (p :Prog) : List [Cmd] = p match {
 //return the final rconfig
 
 def rstep_all (c :RConfig) : RConfig = {
-    println (rconfig_to_string(c))
+    timer = timer + 1
+    println (rconfig_to_string(c) + "step = " + timer) 
+    println ("")
+    if (timer > 50) {
+        throw new Exception("Infinite loop")
+    }
+
     c match {
     case (cs, rs, renv, bs) => {
         cs match {
@@ -582,12 +770,14 @@ def main(filename: String): Unit = {
   // val result = rev_prog(rev_tree)
     print ("rimp tree ==> " + rimp_tree + "\n")
     val config = init_config(rimp_tree)
+   // println ("initial config ==> " + rconfig_to_string(config) + "\n")
     val switched = switch(rstep_all(config))
     print ("switched config ==> " + rconfig_to_string(switched) + "\n")
 
     println ("running in reverse " + "\n")
 
     rstep_all(switched)
+
 
 
 

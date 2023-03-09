@@ -1,7 +1,3 @@
-    x := 1 ; 
-    r := 3 ; 
-    if !r = 3
-    then x := 3 ;
-        r:= 10
-    else x := 5 ; 
-    r := 7 
+fact := 1;
+while (!fact < 2) do
+    fact := !fact + 1 
