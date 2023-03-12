@@ -16,8 +16,8 @@ def new_rev_counter : (String, Int) = {
   ("counter_" + counter.toString, current_counter)
 }
 
+var while_counters_map = Map[Cmd , String]()
 
-var indextable = Map[String, IExp]()
 
 
 def rev_exp (e : IExp) : IExp = e match {
@@ -33,6 +33,7 @@ def rev_cmd (c : Cmd) : Cmd = c match {
     //while !counteri > 0 do rev(C)
     case While (e, c1) =>  {
         e match {
+            
             case Bop (">", DRefr(var_name), Num(0)) => {
                 //this is the case where a while loop contains a counter
                 //check if the counter is in the table
@@ -48,12 +49,25 @@ def rev_cmd (c : Cmd) : Cmd = c match {
                  While (Bop(">", DRefr(counter_string), Num(0)), rev_block(c1) )
                 }
             }
-            case _ =>  
-                val (counter_string, counter_int) = new_rev_counter
-                indextable = indextable + (counter_string -> e)
-                 While (Bop(">", DRefr(counter_string), Num(0)), rev_block(c1) )
+            case _ =>
+                    //check if the expression is in the table values
+                    if (indextable.values.exists(_ == e)) {
+                        println ("rev case 2 ==> " + e)
+                        //get the counter from the table
+                        val counter_string = indextable.filter(_._2 == e).keys.head
+                        //return the while loop with the counter from the table
+                        While (Bop(">", DRefr(counter_string), Num(0)), rev_block(c1))
+                    }
+                    else {
+                        //create a new counter
+                        val (counter_string, counter_int) = new_rev_counter
+                        //add the counter to the table
+                        indextable = indextable + (counter_string -> e)
+                        //return the while loop with the new counter
+                        While (Bop(">", DRefr(counter_string), Num(0)), rev_block(c1))
+                    }
         }
-        
+
     }
 }
 

@@ -212,6 +212,27 @@ case object ULConditionLabel extends Cmd {  //underlined condition label for con
 }
 
 
+case class WhileLabel(index : Int) extends Cmd {  //while label for convenience on the control stack 
+  override def toString = "while"
+}
+
+case class ULWhileLabel(index : Int) extends Cmd {  //underlined while label for convenience on the control stack 
+  override def toString = underline("while")
+}
+
+case class LoopLabel(index : Int) extends Cmd {  //loop label for convenience on the control stack 
+  override def toString = "loop"
+}
+
+case class ULLoopLabel(index : Int) extends Cmd {  //underlined loop label for convenience on the control stack 
+  override def toString = underline("loop")
+}
+
+case class EndWhileLabel(index : Int) extends Cmd {  //end while label for convenience on the control stack 
+  override def toString = underline("endwhile")
+}
+
+
 case class  ProgBl (bl: Block) extends Prog //program block to keep track of the block of a program
 
 case class ProgSeq(p1: Prog, p2: Prog) extends Prog //program sequence

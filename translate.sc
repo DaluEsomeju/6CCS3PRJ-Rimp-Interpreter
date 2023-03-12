@@ -20,6 +20,9 @@ def new_counter_string : String = {
 }
 
 
+var indextable = Map[String, IExp]()
+
+
 def translate_if (i : Cmd) : Block = i match {
     case If (e , c1, c2 ) => {
         val translation = translate_exp(e)
@@ -36,8 +39,9 @@ def translate_while (i : Cmd) : Block = i match {
     case While (e , c1) => {
         var counter_string = new_counter_string
         val init_counter = Assign(Var(counter_string), Num(0))
-
+        indextable = indextable + (counter_string -> e)
         init_counter :: While(e, translate_block(c1) ++ List(Assign(Var(counter_string), Aop("+", DRefr(counter_string), Num(1))))) :: Nil
+        
     }
 
     case _ => List(i)
