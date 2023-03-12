@@ -4,7 +4,7 @@ import $file.translate, translate._
 import $file.invert, invert._
 import $file.interpret, interpret._
 import $file.parser, parser._
-
+import $file.trees, trees._
 
 
 //v ::= 0 | +(n, v) 

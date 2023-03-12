@@ -4,6 +4,7 @@
 
 import $file.parser , parser._
 import $file.lexer, lexer._ 
+import $file.trees , trees._
 
 type Env = Map[String, Int]
 

@@ -5,7 +5,7 @@ import $file.lexer, lexer._
 import $file.parser, parser._
 
 import $file.translate, translate._
-
+import $file.trees , trees._
 //program inverter for Rimp language
 
 

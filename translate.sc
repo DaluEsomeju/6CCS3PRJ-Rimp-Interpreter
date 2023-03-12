@@ -7,6 +7,7 @@ import scala.language.reflectiveCalls
 
 import $file.lexer, lexer._
 import $file.parser, parser._
+import $file.trees , trees._
 
 var counter = -1
 def new_variable_string : String = {
