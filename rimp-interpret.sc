@@ -470,7 +470,6 @@ def step_revcmd (c :RConfig) : Option [RConfig] = c match {
         val new_bs = ULConditionLabel :: bs
         Some(top_of_control ::: cs, new_rs, renv, new_bs)
 
-        //todo check if this is correct
     }
 
     case (ULConditionLabel :: bs, rs, renv, cs) => {
@@ -487,7 +486,6 @@ def step_revcmd (c :RConfig) : Option [RConfig] = c match {
         val new_cs = If(e, c1, c2) :: cs.drop(3)
         Some(bs, new_rs, renv, new_cs)
 
-        //todo check if this is correct
     }
 
 
@@ -514,7 +512,6 @@ def step_revcmd (c :RConfig) : Option [RConfig] = c match {
             case _ => throw new Exception("Invalid expression")
         }
 
-        //todo check if this is correct
     }
 
     case (ULIfLabel:: bs , rs , renv , cs) => {
@@ -557,7 +554,6 @@ def step_revcmd (c :RConfig) : Option [RConfig] = c match {
         val new_bs = If(e, revc1, revc2) :: bs.drop(4)
         Some(cs, new_rs, renv, new_bs)
 
-        //todo check if this is correct
     }
 
     case (While (e , c) :: cs, rs, renv, bs) => {
@@ -569,7 +565,6 @@ def step_revcmd (c :RConfig) : Option [RConfig] = c match {
 
         Some(top_of_control ::: cs, top_of_rs ::: rs, renv, new_bs)
 
-        //todo check if this is correct
     }
 
     case (ULLoopLabel(index) :: bs, rs, renv, cs) => {
@@ -582,7 +577,6 @@ def step_revcmd (c :RConfig) : Option [RConfig] = c match {
         val new_cs = While(e, c) :: cs.drop(3)
         Some(bs, new_rs, renv, new_cs)
 
-        //todo check if this is correct
     }
 
     case (WhileLabel(index) :: cs, rs, renv, bs) => {
@@ -608,8 +602,6 @@ def step_revcmd (c :RConfig) : Option [RConfig] = c match {
             }
             case _ => throw new Exception("Invalid expression")
         }
-
-        //todo check if this is correct
 
     }
 
@@ -637,8 +629,6 @@ def step_revcmd (c :RConfig) : Option [RConfig] = c match {
             case _ => throw new Exception("Invalid expression")
         }
 
-        //todo check if this is correct
-
     }
 
     case (LoopLabel(index) :: cs, rs, renv, bs) => {
@@ -665,7 +655,7 @@ def step_revcmd (c :RConfig) : Option [RConfig] = c match {
                     case _ => throw new Exception("Invalid expression")
                 }
                 val new_rs = incremented :: rs.drop(1)
-                val new_bs =  EndWhileLabel(index) :: bs.drop(5)  //todo check if this is correct , why remove the endwhile label
+                val new_bs =  EndWhileLabel(index) :: bs.drop(5)  
                 Some(LoopLabel(index) :: cs, new_rs, renv, new_bs)
             }
 
@@ -679,8 +669,6 @@ def step_revcmd (c :RConfig) : Option [RConfig] = c match {
         
 
         }
-
-        //todo check if this is correct
     }
 
 
@@ -713,7 +701,7 @@ def step_revcmd (c :RConfig) : Option [RConfig] = c match {
             case _ => throw new Exception("Invalid expression in EndWhileLabel")
         }
 
-        //todo check if this is correct
+      
     }
 
 }
@@ -779,21 +767,3 @@ def main(filename: String): Unit = {
 
 }
 
-
-//test 
-
-// val tokens = tokenise(os.read(os.pwd / "test.simp"))
-// val tree = Prog.parse_single(tokens)
-// val rimp_tree = translate_prog(tree)
-// print ("rimp tree ==> " + rimp_tree + "\n")
-// val config = init_config(rimp_tree)
-// println ("initial config ==> " + rconfig_to_string(config) + "\n")
-
-// rstep_all(config)
-
-// //   val switched = switch(rstep_all(config))
-// //   print ("switched config ==> " + rconfig_to_string(switched) + "\n")
-
-// //   println ("running in reverse " + "\n")
-
-// //   rstep_all(switched)
