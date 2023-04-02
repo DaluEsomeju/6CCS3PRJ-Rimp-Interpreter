@@ -44,15 +44,15 @@ def rev_cmd (c : Cmd) : Cmd = c match {
                     While (e, rev_block(c1))
                 }
                 else {
+                //this is the case where a while loop contains a greater than operator but no counter
                 val (counter_string, counter_int) = new_rev_counter
                 indextable = indextable + (counter_string -> e)
                  While (Bop(">", DRefr(counter_string), Num(0)), rev_block(c1) )
                 }
             }
             case _ =>
-                    //check if the expression is in the table values
+                    //check if the expression is in the table values 
                     if (indextable.values.exists(_ == e)) {
-                        println ("rev case 2 ==> " + e)
                         //get the counter from the table
                         val counter_string = indextable.filter(_._2 == e).keys.head
                         //return the while loop with the counter from the table

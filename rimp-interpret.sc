@@ -727,7 +727,7 @@ var step_timer = 0
 //print each step
 //return the final rconfig
 
-def rstep_all (c :RConfig) : RConfig = {
+def r_interpret (c :RConfig) : RConfig = {
     step_timer = step_timer + 1
     println ("step " + step_timer)
     println (rconfig_to_string(c))
@@ -735,10 +735,10 @@ def rstep_all (c :RConfig) : RConfig = {
     case (cs, rs, renv, bs) => {
         cs match {
             case Nil => c
-            case ProgSeq(p1, p2) :: xs => rstep_all(step_revcmd(c).get)
+            case ProgSeq(p1, p2) :: xs => r_interpret(step_revcmd(c).get)
             case x :: xs => x.isInstanceOf[Cmd] match {
-                case true => rstep_all(step_revcmd(c).get)
-                case false => rstep_all(step_revexp(c).get)
+                case true => r_interpret(step_revcmd(c).get)
+                case false => r_interpret(step_revexp(c).get)
             }
         }
        }
@@ -755,13 +755,13 @@ def main(filename: String): Unit = {
   // val result = rev_prog(rev_tree)
     print ("rimp tree ==> " + rimp_tree + "\n")
     val config = init_config(rimp_tree)
-    val switched = switch(rstep_all(config))
+    val switched = switch(r_interpret(config))
  
     print ("switched config ==> " + rconfig_to_string(switched) + "\n")
 
     println ("running in reverse " + "\n")
 
-    rstep_all(switched)
+    r_interpret(switched)
 
 
 

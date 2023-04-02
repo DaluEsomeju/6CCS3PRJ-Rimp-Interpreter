@@ -1,12 +1,4 @@
-// A tokeniser for the Fun language
-//==================================
-//
-// call with 
-//
-//     amm fun_tokens.sc fact.fun
-//
-//     amm fun_tokens.sc defs.fun
-//
+// A tokeniser for the SIMP language
 
 
 
@@ -281,6 +273,8 @@ def tokenise(s: String) : List[Token] = {
   if (tks.length != 0) tks
   else { println (s"Tokenise Error") ; sys.exit(-1) }     
 }
+ 
+
 
 // pre-2.5.0 ammonite 
 // import ammonite.ops._
@@ -291,6 +285,7 @@ def tokenise(s: String) : List[Token] = {
 //@doc("Tokenising a file.")
 @main
 def main(fname: String) = {
-  println(tokenise(os.read(os.pwd / fname)))
+  val s = os.read(os.pwd / fname)
+  println(lexing_simp(SIMP_REGS, s) )
 }
 

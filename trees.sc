@@ -18,22 +18,48 @@ abstract class Cmd extends Prog //command
 abstract class IExp  extends Prog //integer expression
 
 
-type Block = List[Cmd]
+type Block = List[Cmd] 
 
+def block_to_string(bl: Block) : String = bl match {
+  case Nil => ""
+  case c::Nil => c.toString
+  case c::cs => c.toString + "; " + block_to_string(cs)
+}
 
 case object Skip extends Cmd
-case class If(a: IExp, bl1: Block, bl2: Block) extends Cmd
-case class While(b: IExp, bl: Block) extends Cmd
-case class Assign(v: Var, a: IExp) extends Cmd
-case class RevAssign(v: Var, a: IExp) extends Cmd 
+case class If(a: IExp, bl1: Block, bl2: Block) extends Cmd {
+  override def toString = "if (" + a + ") then {" + block_to_string(bl1) + "} else {" + block_to_string(bl2) + "}"
+}
+case class While(b: IExp, bl: Block) extends Cmd {
+  override def toString = "while (" + b + ") do {" + block_to_string(bl) + "}"
+}
+case class Assign(v: Var, a: IExp) extends Cmd {
+  override def toString = v + " := " + a
+}
+case class RevAssign(v: Var, a: IExp) extends Cmd  {
+  override def toString = v + " =: " + a
+}
 
 
-case class Var(s: String) extends IExp
-case class Num(i: Int) extends IExp
-case class Aop(o: String, a1: IExp, a2: IExp) extends IExp
-case class Bop(o: String, a1: IExp, a2: IExp) extends IExp
-case class Not(a: IExp) extends IExp
-case class DRefr(s: String) extends IExp //dereference written as !s
+case class Var(s: String) extends IExp {
+  override def toString = s
+}
+case class Num(i: Int) extends IExp {
+  override def toString = i.toString
+}
+case class Aop(o: String, a1: IExp, a2: IExp) extends IExp {
+  override def toString =   a1 + " " + o + " " + a2 
+}
+case class Bop(o: String, a1: IExp, a2: IExp) extends IExp {
+  override def toString =  a1 + " " + o + " " + a2 
+}
+case class Not(a: IExp) extends IExp {
+  override def toString = "¬" + a
+}
+case class DRefr(s: String) extends IExp //dereference written as !s in the parser
+{
+  override def toString = "!" + s
+}
 
 //not used in the parser, but used in the interpreter for convenience
 
@@ -42,22 +68,22 @@ def underline(s: String) = "\u001b[4m" + s + "\u001b[0m"
 
 //Underlined versions of expressions used to keep track of the control stack and the back stack
 case class ULVar(s: String) extends IExp {  //underlined variable 
-  override def toString = "Var(" + underline(s) + ")"
+  override def toString = underline(s)
 }
 case class ULNum(i: Int) extends IExp {  //underlined number 
-  override def toString = "Num(" + underline(i.toString) + ")"
+  override def toString = underline(i.toString)
 }
 case class ULAop(o: String, a1: IExp, a2: IExp) extends IExp{
-  override def toString = "Aop(" + underline(o) + ", " + a1 + ", " + a2 + ")"
+  override def toString = underline( a1 + " " + o + " " + a2 )
 }
 case class ULBop(o: String, a1: IExp, a2: IExp) extends IExp {
-  override def toString = "Bop(" + underline(o) + ", " + a1 + ", " + a2 + ")"
+  override def toString = underline( a1 + " " + o + " " + a2 )
 }
 case class ULNot(a: IExp) extends IExp {
-  override def toString = "Not(" + a + ")"
+  override def toString = underline("¬" + a)
 }
 case class ULDRefr(s: String) extends IExp {  //underlined dereference 
-  override def toString = "DRefr( " + underline(s) + " )"
+  override def toString = underline("!" + s)
 }
 
 case object EmptyExp extends IExp {  //empty expression label for convenience on the control stack 
@@ -127,6 +153,12 @@ case class EndWhileLabel(index : Int) extends Cmd {  //end while label for conve
 
 
 case class  ProgBl (bl: Block) extends Prog //program block to keep track of the block of a program
+{
+  override def toString = block_to_string(bl)
+}
 
 case class ProgSeq(p1: Prog, p2: Prog) extends Prog //program sequence
+{
+  override def toString = p1.toString + " ; " + p2.toString
+}
 
