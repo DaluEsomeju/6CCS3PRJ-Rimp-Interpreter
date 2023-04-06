@@ -106,12 +106,22 @@ def translate_prog (prog :List[Prog]) : List[Prog] = {
 
 
 @main
+//translate simp to rimp
+//prints the initial simp program and the translated rimp program
 def main(filename: String): Unit = {
   val tokens = tokenise(os.read(os.pwd / filename))
   val tree = Prog.parse_single(tokens)
-  print ("initial tree: " +  "\n" + tree + "\n")
+  val treestring = tree match {
+    case Nil => "parse error"
+    case _ => tree.mkString(" ; ")
+  }
+  print ("initial SIMP program: " +  "\n" + treestring + "\n")
   println (" \n")
    val result = translate_prog(tree)
-   print ("revrsible tree: " +  "\n" + result + "\n")
+   val resultstring = result match {
+    case Nil => "parse error"
+    case _ => result.mkString(" ; ")
+    }
+   print ("revrsible RIMP program: " +  "\n" + resultstring + "\n")
 
 }

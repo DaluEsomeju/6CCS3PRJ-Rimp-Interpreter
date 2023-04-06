@@ -1,3 +1,4 @@
+//test file where users can write their own SIMP programs
 fact := 1;
 n := 3;
 while (!n > 0) do

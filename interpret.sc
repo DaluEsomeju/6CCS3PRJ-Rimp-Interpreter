@@ -13,6 +13,8 @@ type Env = Map[String, Int]
 // E ::= !l | n | E op E | ¬E
 // op ::= + | − | ∗ | / | > | < | = | ∧
 
+var simp_timer = 0
+
 def eval_exp (e: Prog, env: Env): Int = e match {
   case Num(n) => n
   case Aop("+", e1, e2) => eval_exp(e1, env) + eval_exp(e2, env)
@@ -40,9 +42,6 @@ def eval_block (bl: List[Prog], env: Env): Env = bl match {
   case Nil => env
   case c::cs => eval_block(cs, eval_cmd(c, env))
 }
-
-
-
 
 
 //A configuration is a triple of stacks: (Control, Results, Memory)
@@ -210,6 +209,8 @@ def step (c : Config) : Option[Config] = c match {
 //call step repeatedly until a final configuration is reached
 //print the configuration after each step
 def interpret (c : Config) : Config = {
+  simp_timer = simp_timer + 1
+  println("step " + simp_timer )
   println(config_to_string(c))
   step(c) match {
     case Some(c1) => interpret(c1)
@@ -226,35 +227,4 @@ def main(filename: String): Unit = {
   val interpretation = interpret(init_config(tree))
 }
 
-
-//test 
-
-// val tokens = tokenise(os.read(os.pwd / "test.simp"))
-// val tree = Prog.parse_single(tokens)
-// val env = Map[String, Int]()
-// //call step once on the tree
-// val testresult = step_command(init_config(tree))
-
-// //get the results stack
-// val testresultstack = testresult match {
-//   case Some(c) => c._2
-//   case None => List()
-// }
-
-// //get the top of the results stack
-
-// val testresulttop = testresultstack match {
-//   case Nil => None
-//   case x::xs => Some(x)
-// }
-
-// println(testresulttop)
-
-// //convert the result to a string and print it
-// val testresultstring = testresult match {
-//   case Some(c) => config_to_string(c)
-//   case None => "None"
-// }
-
-// println(testresultstring)
 

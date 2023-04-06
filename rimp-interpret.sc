@@ -23,6 +23,12 @@ class Rval   {
         case RvZero => throw new Exception("not an RvPair")
         case RvPair(n, r) => r
     }
+
+    //v :: = 0 | +(n, v)
+    override def toString : String = this match {
+        case RvZero => "0"
+        case RvPair(n, r) => "+" + "(" + n + ", " + r + ")"
+    }
 }
 
 
@@ -634,7 +640,6 @@ def step_revcmd (c :RConfig) : Option [RConfig] = c match {
     case (LoopLabel(index) :: cs, rs, renv, bs) => {
         bs match {
             case (Num(0) :: rest )=> {
-                println("LoopLabel case 1")
                 val c = rs.tail.head match {
                     case ProgSeq(x, y) => prog_seq_as_block(ProgSeq(x, y))
                     case _ =>rs.tail.head.asInstanceOf[Cmd] :: Nil
@@ -648,7 +653,6 @@ def step_revcmd (c :RConfig) : Option [RConfig] = c match {
             }
 
             case (EndWhileLabel(index) :: command :: Num(1) :: rest) => {
-                println("LoopLabel case 2")
                 val n = rs.head.to_Iexp
                 val incremented = n match {
                     case Num(x) => Num(x + 1)
@@ -660,7 +664,6 @@ def step_revcmd (c :RConfig) : Option [RConfig] = c match {
             }
 
             case _ => {
-                println("LoopLabel case 3")
                 val c1 = rs.tail.head 
                 val new_rs = rs.drop(4)
                 val new_bs = c1 :: bs.drop(1) //dont apply the endwhile label
@@ -751,19 +754,14 @@ def r_interpret (c :RConfig) : RConfig = {
 def main(filename: String): Unit = {
   val tokens = tokenise(os.read(os.pwd / filename))
   val tree = Prog.parse_single(tokens)
+  print ("SIMP program ==> " + tree + "\n")
   val rimp_tree = translate_prog(tree)
-  // val result = rev_prog(rev_tree)
-    print ("rimp tree ==> " + rimp_tree + "\n")
+    print ("RIMP prpgram ==> " + rimp_tree + "\n")
     val config = init_config(rimp_tree)
     val switched = switch(r_interpret(config))
- 
     print ("switched config ==> " + rconfig_to_string(switched) + "\n")
-
     println ("running in reverse " + "\n")
-
     r_interpret(switched)
-
-
 
 }
 

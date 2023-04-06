@@ -42,7 +42,10 @@ case class RevAssign(v: Var, a: IExp) extends Cmd  {
 
 
 case class Var(s: String) extends IExp {
-  override def toString = s
+  override def toString = s match {
+    case null => ""
+    case _ => s
+  }
 }
 case class Num(i: Int) extends IExp {
   override def toString = i.toString
@@ -87,7 +90,7 @@ case class ULDRefr(s: String) extends IExp {  //underlined dereference
 }
 
 case object EmptyExp extends IExp {  //empty expression label for convenience on the control stack 
-  override def toString = "exp"
+  override def toString = ""
 }
 
 case object NegExp extends IExp {  //negative empty expression label for convenience on the back stack 

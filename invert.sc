@@ -1,3 +1,5 @@
+//program inverter for Rimp language
+
 import scala.language.implicitConversions
 import scala.language.reflectiveCalls
 
@@ -6,7 +8,7 @@ import $file.parser, parser._
 
 import $file.translate, translate._
 import $file.trees , trees._
-//program inverter for Rimp language
+
 
 
 var rev_counter = -1
@@ -96,10 +98,25 @@ def main(filename: String): Unit = {
   val rev_tree = translate_prog(tree)
   val result = rev_prog(rev_tree)
   val original = rev_prog(result)
-    print ("reversed tree ==> " + rev_tree + "\n")
+  val rev_tree_string = rev_tree match {
+    case Nil => ""
+    case tree => tree.mkString(" ; ")
+    }
+
+   val result_string = result match {
+    case Nil => ""
+    case tree => tree.mkString(" ; ")
+    }
+
+    val original_tree_string = original match {
+    case Nil => ""
+    case tree => tree.mkString(" ; ")
+    }
+
+    print ("RIMP program P==> " + rev_tree_string + "\n")
     print ("\n\n\n")
-    print ("result ==> " + result + "\n")
+    print ("Inverted Program P' ==> " + result_string + "\n")
     print ("\n\n\n")
-    print ("reversed result ==> " + original + "\n")
+    print ("P from inverting P' ==> " + original_tree_string + "\n")
 
 }

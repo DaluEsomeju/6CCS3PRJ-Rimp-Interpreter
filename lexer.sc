@@ -82,7 +82,7 @@ def flatten(v: Val) : String = v match {
 }
 
 // extracts an environment from a value;
-// used for tokenise a string
+// used for tokenising a string
 def env(v: Val) : List[(String, String)] = v match {
   case Empty => Nil
   case Chr(c) => Nil
@@ -232,7 +232,7 @@ val SIMP_REGS = (("k" $ KEYWORD) |
 
 
 
-// The tokens for the Fun language
+// The tokens for the SIMP language
 
 abstract class Token extends Serializable 
 case object T_SEMI extends Token
@@ -274,18 +274,15 @@ def tokenise(s: String) : List[Token] = {
   else { println (s"Tokenise Error") ; sys.exit(-1) }     
 }
  
-
-
-// pre-2.5.0 ammonite 
-// import ammonite.ops._
-
-// post 2.5.0 ammonite
-// import os._
-
-//@doc("Tokenising a file.")
+ 
+//prints the tokens of the input file
 @main
 def main(fname: String) = {
   val s = os.read(os.pwd / fname)
-  println(lexing_simp(SIMP_REGS, s) )
+  val tks = tokenise(s)
+  println(tks match {
+    case Nil => "No tokens"
+    case _ => tks.mkString(" , ")
+  })
 }
 

@@ -1,14 +1,5 @@
 // A parser for the SIMP language
-//================================
-//
-// call with 
-//
-//     amm fun_parser.sc fact.simp
-//
-//     amm fun_parser.sc defs.simp
-//
-// this will generate a parse-tree from a list
-// of tokens
+
 
 import scala.language.implicitConversions    
 import scala.language.reflectiveCalls
@@ -173,25 +164,20 @@ lazy val Prog : Parser [List[Token], List[Prog]] =
   (IExp) ==> { case x => List(x) : List[Prog] } 
 
 
-
-
-// Reading tokens and Writing parse trees
-
-// pre-2.5.0 ammonite 
-// import ammonite.ops._
-
-// post 2.5.0 ammonite
-// import os._
-
-
 def parse_tks(tks: List[Token]) : List[Prog] = 
   Prog.parse_single(tks)
 
-
+//prints the tokens and parses the program according to the grammar
 @main
 def main(fname: String) : Unit = {
   val tks = tokenise(os.read(os.pwd / fname))
-  println(parse_tks(tks))
+  println ("Tokens: \n" + tks.mkString(" , "))
+  println
+  println ("Parse: ")
+  println(parse_tks(tks) match {
+    case Nil => "No parse"
+    case ps => ps.mkString(" ; ") 
+  })
 }
 
 
