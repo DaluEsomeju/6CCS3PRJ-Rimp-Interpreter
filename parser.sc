@@ -1,4 +1,7 @@
 // A parser for the SIMP language
+//  Attribution Information: The Code in this file is based on the code provided by Christian Urban for the 6CCS3CFL course 
+// in the academic year 2022/2023. The code has been modified to suit the needs of the project.
+
 
 
 import scala.language.implicitConversions    
