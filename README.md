@@ -30,7 +30,9 @@ test.simp is intended to be a file in which users can write their own programs t
    [Scala Download Page](https://www.scala-lang.org/download/)
 
 4. Install Ammonite REPL: This project requires a Mac or Linux-based system. Install the standalone Ammonite 3.0.0-M0 executable for Scala 2.13 using the following command:
- sudo sh -c '(echo "#!/usr/bin/env sh" && curl -L https://github.com/com-lihaoyi/Ammonite/releases/download/3.0.0-M0/2.13-3.0.0-M0) > /usr/local/bin/amm && chmod +x /usr/local/bin/amm' && amm
+
+$ sudo sh -c '(echo "#!/usr/bin/env sh" && curl -L https://github.com/com-lihaoyi/Ammonite/releases/download/3.0.0-M0/2.13-3.0.0-M0) > /usr/local/bin/amm && chmod +x /usr/local/bin/amm' && amm
+
 
 ## Usage
 
@@ -38,7 +40,7 @@ To run the code, use the Ammonite REPL with the appropriate script and provide a
 
 For example, to perform lexical analysis on a file called `example.simp`, use the following command:
 
-amm lexer.sc example.simp
+`amm lexer.sc example.simp`
 
 
 This command will run the `lexer.sc` script with the `example.simp` file, performing lexical analysis on the contents of the file.
