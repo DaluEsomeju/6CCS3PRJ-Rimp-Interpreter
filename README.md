@@ -31,7 +31,7 @@ test.simp is intended to be a file in which users can write their own programs t
 
 4. Install Ammonite REPL: This project requires a Mac or Linux-based system. Install the standalone Ammonite 3.0.0-M0 executable for Scala 2.13 using the following command:
 
-```bash
+```
 $ sudo sh -c '(echo "#!/usr/bin/env sh" && curl -L https://github.com/com-lihaoyi/Ammonite/releases/download/3.0.0-M0/2.13-3.0.0-M0) > /usr/local/bin/amm && chmod +x /usr/local/bin/amm' && amm ```
 
 
