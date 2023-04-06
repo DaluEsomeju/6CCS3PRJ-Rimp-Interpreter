@@ -11,7 +11,7 @@ The goal of this project is to implement an abstract machine for a small program
 - rimp-interpret.sc: Abstract machine for RIMP programs
 
 The project also contains ".simp" files which are example programs that can be executed by the Scala scripts (trees.sc only contains classes and does not contain a main method to be executed).
-Test.simp is intended to be a file in which users can write their own programs to be testesd.
+test.simp is intended to be a file in which users can write their own programs to be testesd.
 
 
 ## Prerequisites
