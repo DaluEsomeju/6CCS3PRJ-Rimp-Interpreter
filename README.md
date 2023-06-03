@@ -7,8 +7,8 @@ The project implements an abstract machine for a small programming language call
 - trees.sc: Contains abstract syntax tree classes for SIMP/RIMP
 - interpret.sc: Abstract machine for SIMP programs
 - translate.sc: Translate SIMP to RIMP
-- invert.sc: Program inverter for RIMP programs
-- rimp-interpret.sc: Abstract machine for RIMP programs
+- invert.sc: Program inverter for RIMP programs 
+- rimp-interpret.sc: Abstract machine for RIMP programs to execute programs forwards and backards. 
 
 The project also contains ".simp" files which are example programs that can be executed by the Scala scripts (trees.sc only contains classes and does not contain a main method to be executed).
 test.simp is intended to be a file in which users can write their own programs to be testesd.
