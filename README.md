@@ -1,6 +1,6 @@
 # Abstract Machine for RIMP
 
-The goal of this project is to implement an abstract machine for a small programming language called RIMP. This is accomplished using several scripts (modules):
+The project implements an abstract machine for a small programming language called RIMP. This is accomplished using several scripts (modules):
 
 - lexer.sc: Lexer for SIMP
 - parser.sc: Parser for SIMP
